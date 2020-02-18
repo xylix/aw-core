@@ -47,6 +47,15 @@ class Datastore:
     def buckets(self):
         return self.storage_strategy.buckets()
 
+    def create_value(self, key: str, data) -> str:
+        self.logger.info("Creating value with key '{}'".format(key))
+        return self.storage_strategy.create_value(key, data)
+
+    def delete_value(self, key: str) -> None:
+        self.logger.info("Deleting key-value pair key: '{}'".format(key))
+        return self.storage_strategy.delete_value(key)
+
+
 
 class Bucket:
     def __init__(self, datastore: Datastore, bucket_id: str) -> None:

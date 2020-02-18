@@ -42,6 +42,13 @@ CREATE_EVENTS_TABLE = """
     )
 """
 
+CREATE_KEY_VALUE_TABLE = """
+    CREATE TABLE IF NOT EXISTS key_value (
+        key TEXT PRIMARY KEY,
+        value TEXT
+    )
+"""
+
 INDEX_BUCKETS_TABLE_ID = """
     CREATE INDEX IF NOT EXISTS event_index_id ON events(id);
 """
@@ -51,6 +58,10 @@ INDEX_EVENTS_TABLE_STARTTIME = """
 """
 INDEX_EVENTS_TABLE_ENDTIME = """
     CREATE INDEX IF NOT EXISTS event_index_endtime ON events(bucketrow, endtime);
+"""
+
+INDEX_KEY_VALUE_TABLE = """
+    CREATE INDEX IF NOT EXISTS key ON key_value(key)
 """
 
 
@@ -77,9 +88,11 @@ class SqliteStorage(AbstractStorage):
         # Create tables
         self.conn.execute(CREATE_BUCKETS_TABLE)
         self.conn.execute(CREATE_EVENTS_TABLE)
+        self.conn.execute(CREATE_KEY_VALUE_TABLE)
         self.conn.execute(INDEX_BUCKETS_TABLE_ID)
         self.conn.execute(INDEX_EVENTS_TABLE_STARTTIME)
         self.conn.execute(INDEX_EVENTS_TABLE_ENDTIME)
+        self.conn.execute(INDEX_KEY_VALUE_TABLE)
         self.conn.execute("PRAGMA journal_mode=WAL;")
         self.commit()
 
@@ -264,3 +277,17 @@ class SqliteStorage(AbstractStorage):
         row = rows.fetchone()
         eventcount = row[0]
         return eventcount
+
+    def create_value(self, key, data):
+        self.commit()
+        self.conn.execute("INSERT INTO key_value(key, data) "
+                          "VALUES (?, ?)",
+                          [key, data])
+        self.commit()
+        return self.get_metadata_value(key)
+
+    def delete_value(self, key):
+        cursor = self.conn.execute("DELETE FROM key_value WHERE id = ?", [key])
+        self.commit()
+        if cursor.rowcount != 1:
+            raise Exception('Value for {} did not exist, could not delete'.format(key))
