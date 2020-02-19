@@ -284,10 +284,17 @@ class SqliteStorage(AbstractStorage):
                           "VALUES (?, ?)",
                           [key, data])
         self.commit()
-        return self.get_metadata_value(key)
+        return self.get_value(key)
 
     def delete_value(self, key):
-        cursor = self.conn.execute("DELETE FROM key_value WHERE id = ?", [key])
+        cursor = self.conn.execute("DELETE FROM key_value WHERE id = ?", key)
         self.commit()
         if cursor.rowcount != 1:
             raise Exception('Value for {} did not exist, could not delete'.format(key))
+
+    def get_value(self, key):
+        self.commit()
+        cursor = self.conn.execute("SELECT * FROM key_value WHERE key = ?", key)
+        if cursor.rowcount != 1:
+            raise Exception('Value for {} did not exist, could not get'.format(key))
+        return cursor.fetchone()

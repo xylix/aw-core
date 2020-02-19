@@ -70,3 +70,7 @@ class AbstractStorage(metaclass=ABCMeta):
     @abstractmethod
     def delete_value(self, key):
         raise NotImplementedError
+
+    @abstractmethod
+    def get_value(self, key):
+        raise NotImplementedError
